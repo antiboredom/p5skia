@@ -328,8 +328,7 @@ class Canvas:
             y (float): y
             r (float): radius
         """
-        self.path.addCircle(x, y, r)
-        self.render()
+        self.ellipse(x, y, r, r)
 
     def quad(
         self,
