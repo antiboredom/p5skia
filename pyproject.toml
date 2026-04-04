@@ -1,0 +1,27 @@
+[project]
+name = "p5skia"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Sam Lavigne", email = "splavigne@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "glfw>=2.10.0",
+    "imageio-ffmpeg>=0.6.0",
+    "pyopengl>=3.1.10",
+    "skia-python>=144.0.post2",
+]
+
+[project.scripts]
+p5skia = "p5skia:main"
+
+[build-system]
+requires = ["uv_build>=0.10.11,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
