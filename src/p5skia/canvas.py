@@ -251,6 +251,7 @@ class Canvas:
             fontname (str): font name
         """
         self._text_font = Font(Typeface(fontname))
+        self._text_font.setSize(self._text_size)
 
     def text_size(self, size: float):
         """Set the text size
