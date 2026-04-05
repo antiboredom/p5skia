@@ -1,5 +1,6 @@
 from typing import Optional, Literal
 import time
+from contextlib import contextmanager
 import glfw
 import os
 import skia
@@ -634,6 +635,12 @@ class Canvas:
         """Pop the canvas state"""
         self.canvas.restore()
         return self
+
+    @contextmanager
+    def state(self):
+        self.push()
+        yield
+        self.pop()
 
     def translate(self, x: float, y: float):
         """Translate the canvas
