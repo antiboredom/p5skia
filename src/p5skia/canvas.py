@@ -94,9 +94,6 @@ class Canvas:
         if not glfw.init():
             return
 
-        if not self.show:
-            glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
-
         glfw.window_hint(glfw.STENCIL_BITS, 8)  # why do i need this?
         glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 3)
         glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 3)
@@ -109,7 +106,14 @@ class Canvas:
         self.glfw_monitor = monitor
         self.glfw_mode = mode
 
-        window = glfw.create_window(self._width, self._height, self.title, None, None)
+        if not self.show:
+            # Create a minimal hidden window just to obtain a GL context.
+            # This allows off-screen canvases to exceed the screen size.
+            glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
+            window = glfw.create_window(1, 1, self.title, None, None)
+        else:
+            window = glfw.create_window(self._width, self._height, self.title, None, None)
+
         glfw.set_window_size_callback(window, self.resize_cb)
 
         if not window:
@@ -119,17 +123,47 @@ class Canvas:
         glfw.make_context_current(window)
 
         context = skia.GrDirectContext.MakeGL()
-        (real_width, real_height) = glfw.get_framebuffer_size(window)
         self.density = glfw.get_window_content_scale(window)[0]
-        self._width = real_width
-        self._height = real_height
-        backend_render_target = skia.GrBackendRenderTarget(
-            real_width,
-            real_height,
-            0,  # sampleCnt
-            0,  # stencilBits
-            skia.GrGLFramebufferInfo(0, GL.GL_RGBA8),
-        )
+
+        if not self.show:
+            # Use an FBO so the surface can be any size regardless of screen dimensions.
+            real_width = int(self._width * self.density)
+            real_height = int(self._height * self.density)
+
+            fbo = GL.glGenFramebuffers(1)
+            GL.glBindFramebuffer(GL.GL_FRAMEBUFFER, fbo)
+
+            color_buf = GL.glGenRenderbuffers(1)
+            GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, color_buf)
+            GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_RGBA8, real_width, real_height)
+            GL.glFramebufferRenderbuffer(GL.GL_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0, GL.GL_RENDERBUFFER, color_buf)
+
+            stencil_buf = GL.glGenRenderbuffers(1)
+            GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, stencil_buf)
+            GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_STENCIL_INDEX8, real_width, real_height)
+            GL.glFramebufferRenderbuffer(GL.GL_FRAMEBUFFER, GL.GL_STENCIL_ATTACHMENT, GL.GL_RENDERBUFFER, stencil_buf)
+
+            self._width = real_width
+            self._height = real_height
+            backend_render_target = skia.GrBackendRenderTarget(
+                real_width,
+                real_height,
+                0,  # sampleCnt
+                0,  # stencilBits
+                skia.GrGLFramebufferInfo(int(fbo), GL.GL_RGBA8),
+            )
+        else:
+            (real_width, real_height) = glfw.get_framebuffer_size(window)
+            self._width = real_width
+            self._height = real_height
+            backend_render_target = skia.GrBackendRenderTarget(
+                real_width,
+                real_height,
+                0,  # sampleCnt
+                0,  # stencilBits
+                skia.GrGLFramebufferInfo(0, GL.GL_RGBA8),
+            )
+
         surface = skia.Surface.MakeFromBackendRenderTarget(
             context,
             backend_render_target,
