@@ -65,22 +65,22 @@ class Canvas:
         self.max_frames = 0
 
         if renderer == "GPU":
-            self.setup_gl()
+            self._setup_gl()
         elif renderer == "CPU":
-            self.setup_raster()
+            self._setup_raster()
         elif renderer == "PDF":
             if output is None or output.lower().endswith(".pdf") is False:
                 raise Exception("PDF renderer requires output path")
-            self.setup_pdf(output)
+            self._setup_pdf(output)
         else:
             raise Exception("Invalid renderer: Pick between 'GPU', 'CPU', or 'PDF'")
 
-    def setup_raster(self):
+    def _setup_raster(self):
         """Setup a raster canvas"""
         self.surface = skia.Surface(self._width, self._height)
         self.canvas = self.surface.getCanvas()
 
-    def setup_pdf(self, output: str):
+    def _setup_pdf(self, output: str):
         """Setup a PDF canvas
         Args:
             output (str): output path
@@ -89,7 +89,7 @@ class Canvas:
         self.surface = skia.PDF.MakeDocument(self.stream)
         self.canvas = self.surface.beginPage(self._width, self._height)
 
-    def setup_gl(self):
+    def _setup_gl(self):
         """Setup a GPU canvas"""
         if not glfw.init():
             return
@@ -112,7 +112,9 @@ class Canvas:
             glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
             window = glfw.create_window(1, 1, self.title, None, None)
         else:
-            window = glfw.create_window(self._width, self._height, self.title, None, None)
+            window = glfw.create_window(
+                self._width, self._height, self.title, None, None
+            )
 
         glfw.set_window_size_callback(window, self.resize_cb)
 
@@ -135,13 +137,27 @@ class Canvas:
 
             color_buf = GL.glGenRenderbuffers(1)
             GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, color_buf)
-            GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_RGBA8, real_width, real_height)
-            GL.glFramebufferRenderbuffer(GL.GL_FRAMEBUFFER, GL.GL_COLOR_ATTACHMENT0, GL.GL_RENDERBUFFER, color_buf)
+            GL.glRenderbufferStorage(
+                GL.GL_RENDERBUFFER, GL.GL_RGBA8, real_width, real_height
+            )
+            GL.glFramebufferRenderbuffer(
+                GL.GL_FRAMEBUFFER,
+                GL.GL_COLOR_ATTACHMENT0,
+                GL.GL_RENDERBUFFER,
+                color_buf,
+            )
 
             stencil_buf = GL.glGenRenderbuffers(1)
             GL.glBindRenderbuffer(GL.GL_RENDERBUFFER, stencil_buf)
-            GL.glRenderbufferStorage(GL.GL_RENDERBUFFER, GL.GL_STENCIL_INDEX8, real_width, real_height)
-            GL.glFramebufferRenderbuffer(GL.GL_FRAMEBUFFER, GL.GL_STENCIL_ATTACHMENT, GL.GL_RENDERBUFFER, stencil_buf)
+            GL.glRenderbufferStorage(
+                GL.GL_RENDERBUFFER, GL.GL_STENCIL_INDEX8, real_width, real_height
+            )
+            GL.glFramebufferRenderbuffer(
+                GL.GL_FRAMEBUFFER,
+                GL.GL_STENCIL_ATTACHMENT,
+                GL.GL_RENDERBUFFER,
+                stencil_buf,
+            )
 
             self._width = real_width
             self._height = real_height
@@ -329,7 +345,7 @@ class Canvas:
         """
         self.path.moveTo(x1, y1)
         self.path.lineTo(x2, y2)
-        self.render()
+        self._render()
 
     def ellipse(self, x: float, y: float, w: float, h: float):
         """Draw an ellipse
@@ -355,7 +371,7 @@ class Canvas:
         self.path.cubicTo(xe, ym + oy, xm + ox, ye, xm, ye)
         self.path.cubicTo(xm - ox, ye, x, ym + oy, x, ym)
 
-        self.render()
+        self._render()
 
     def circle(self, x: float, y: float, r: float):
         """Draw a circle
@@ -393,7 +409,7 @@ class Canvas:
         self.path.lineTo(x3, y3)
         self.path.lineTo(x4, y4)
         self.path.close()
-        self.render()
+        self._render()
 
     def rect(
         self,
@@ -426,7 +442,7 @@ class Canvas:
             self.path.lineTo(x + w, y + h)
             self.path.lineTo(x, y + h)
             self.path.close()
-            self.render()
+            self._render()
             return
 
         if tr is None:
@@ -464,7 +480,7 @@ class Canvas:
         self.path.arcTo(x, y, x + w, y, tl)
         self.path.close()
 
-        self.render()
+        self._render()
 
     def triangle(
         self, x1: float, y1: float, x2: float, y2: float, x3: float, y3: float
@@ -483,7 +499,7 @@ class Canvas:
         self.path.lineTo(x3, y3)
         self.path.close()
 
-        self.render()
+        self._render()
 
     def arc(self):
         # TODO: implement
@@ -643,7 +659,7 @@ class Canvas:
         self.surface.endPage()
         self.surface.beginPage(width, height)
 
-    def render(self, rewind=True):
+    def _render(self, rewind=True):
         """Render the shape/image/text etc to the canvas"""
         if self._fill:
             self.paint.setStyle(Paint.kFill_Style)
