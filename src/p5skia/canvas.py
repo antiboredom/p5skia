@@ -355,22 +355,7 @@ class Canvas:
             w (float): width
             h (float): height
         """
-        # TODO: Switch to built in oval method
-
-        kappa = 0.5522847498
-        ox = w / 2 * kappa
-        oy = h / 2 * kappa
-        xe = x + w
-        ye = y + h
-        xm = x + w / 2
-        ym = y + h / 2
-
-        self.path.moveTo(x, ym)
-        self.path.cubicTo(x, ym - oy, xm - ox, y, xm, y)
-        self.path.cubicTo(xm + ox, y, xe, ym - oy, xe, ym)
-        self.path.cubicTo(xe, ym + oy, xm + ox, ye, xm, ye)
-        self.path.cubicTo(xm - ox, ye, x, ym + oy, x, ym)
-
+        self.path.addOval(skia.Rect.MakeXYWH(x, y, w, h))
         self._render()
 
     def circle(self, x: float, y: float, r: float):
