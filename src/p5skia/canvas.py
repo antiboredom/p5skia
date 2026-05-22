@@ -748,7 +748,7 @@ class Canvas:
         self.surface.endPage()
         self.surface.close()
 
-    def save_video(
+    def start_video(
         self,
         filename: str = "sketch.mp4",
         fps: int = 60,
@@ -764,7 +764,7 @@ class Canvas:
             input_params (Optional[list]): Additional ffmpeg input command line parameters.
             output_params (Optional[list]): Additional ffmpeg output command line parameters.
         """
-        print("starting recording")
+        print("Starting video")
         self.total_recorded_frames = 0
         self.is_recording = True
         self.max_frames = frames
@@ -786,6 +786,6 @@ class Canvas:
 
     def finish_video(self):
         """Finish recording a video"""
-        print("stopping recording")
+        print("Finishing video")
         self.is_recording = False
         self.writer.close()
