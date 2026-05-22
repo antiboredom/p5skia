@@ -4,7 +4,7 @@ c = Canvas(width=600, height=600, show=True)
 
 x = c.width / 2
 y = c.height / 2
-r = 100.0
+d = 100.0
 xspeed = 1.1
 yspeed = 2.4
 
@@ -13,13 +13,13 @@ while c.draw():
 
     c.fill(0, 0, 0, 0.8)
     c.no_stroke()
-    c.circle(x, y, r)
+    c.circle(x, y, d)
 
     x += xspeed
     y += yspeed
 
-    if x + r >= c.width or x - r <= 0:
+    if x + d >= c.width or x <= 0:
         xspeed *= -1
 
-    if y + r >= c.height or y - r <= 0:
+    if y + d >= c.height or y <= 0:
         yspeed *= -1
