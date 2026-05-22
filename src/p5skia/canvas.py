@@ -358,14 +358,14 @@ class Canvas:
         self.path.addOval(skia.Rect.MakeXYWH(x, y, w, h))
         self._render()
 
-    def circle(self, x: float, y: float, r: float):
+    def circle(self, x: float, y: float, d: float):
         """Draw a circle
         Args:
             x (float): x
             y (float): y
-            r (float): radius
+            d (float): diameter
         """
-        self.ellipse(x, y, r, r)
+        self.ellipse(x, y, d, d)
 
     def quad(
         self,
