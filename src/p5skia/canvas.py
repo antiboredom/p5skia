@@ -24,6 +24,7 @@ class Canvas:
         height: int = DEFAULT_HEIGHT,
         show: bool = False,
         renderer: Literal["GPU", "CPU", "PDF"] = "GPU",
+        fps: float = 60.0,
         title: str = DEFAULT_TITLE,
         output: Optional[str] = None,
     ):
@@ -33,6 +34,7 @@ class Canvas:
             height (int): height of canvas
             show (bool): show the canvas
             renderer (str): renderer to use (GPU, CPU, PDF)
+            fps (float): desired frames per second
             title (str): title of window
             output (str): output path for PDF renderer
         """
@@ -45,7 +47,8 @@ class Canvas:
         self.density = 1.0
 
         self.last_frame_time = 0
-        self._fps = 1.0 / 60.0
+        self.fps = fps
+        self._fps = 1.0 / fps
 
         self.paint = Paint()
         self.paint.setAntiAlias(True)
@@ -63,6 +66,8 @@ class Canvas:
         self.is_recording = False
         self.total_recorded_frames = 0
         self.max_frames = 0
+
+        self._output = output
 
         if renderer == "GPU":
             self._setup_gl()
@@ -221,6 +226,26 @@ class Canvas:
         self.context = context
         self.canvas = surface.getCanvas()
         self.canvas.scale(self.density, self.density)
+
+    def resize(self, width: int, height: int) -> None:
+        """
+        Resizes the canvas
+        Args:
+            width (int): width
+            height (int): height
+        """
+
+        self._width = width
+        self._height = height
+
+        if self.renderer == "GPU":
+            self._setup_gl()
+        elif self.renderer == "CPU":
+            self._setup_raster()
+        elif self.renderer == "PDF":
+            if self._output is None or self._output.lower().endswith(".pdf") is False:
+                raise Exception("PDF renderer requires output path")
+            self._setup_pdf(self._output)
 
     def background(self, r: float, g: float, b: float, a=1.0):
         """
