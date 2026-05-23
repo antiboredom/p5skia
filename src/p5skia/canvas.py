@@ -566,7 +566,6 @@ class Canvas:
         line_height: float | None = None,
         align: Literal["left", "right", "center", "justify"] = "left",
         valign: Literal["top", "center", "bottom"] = "top",
-        hyphenate: bool = False,
     ):
         """Draw text in a box.
         Args:
@@ -578,7 +577,6 @@ class Canvas:
             line_height (float|None): line height
             align (str): horizontal text alignement ("left", "right", "center", "justify")
             valign (str): vertical text alignement ("top", "center", "bottom")
-            hyphenate (bool): hyphenate text
         """
         font_size = self._text_font.getSize()
         lh = line_height if line_height is not None else font_size
@@ -601,23 +599,6 @@ class Canvas:
                 else:
                     if current:
                         wrapped.append((" ".join(current), False))
-
-                    if hyphenate and self._text_font.measureText(word) > w:
-                        remaining = word
-                        while remaining:
-                            for end in range(len(remaining), 0, -1):
-                                part = remaining[:end] + (
-                                    "-" if end < len(remaining) else ""
-                                )
-                                if self._text_font.measureText(part) <= w:
-                                    wrapped.append((part, end >= len(remaining)))
-                                    remaining = remaining[end:]
-                                    break
-                            else:
-                                wrapped.append((remaining[0], False))
-                                remaining = remaining[1:]
-                        current = []
-                    else:
                         current = [word]
 
             if current:
