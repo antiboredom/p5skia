@@ -545,7 +545,29 @@ class Canvas:
                 self.canvas.drawSimpleText(line, x, starty, self._text_font, self.paint)
             starty += text_height
 
-    def text_box(self, text: str, x: float, y: float, w: float | None, h: float | None):
+    def _draw_text_at(self, text: str, x: float, y: float):
+        if self._stroke_weight and self._stroke_weight > 0:
+            self.paint.setStyle(Paint.kStroke_Style)
+            self.paint.setColor(Color4f(*self._stroke))
+            self.paint.setStrokeWidth(self._stroke_weight)
+            self.canvas.drawSimpleText(text, x, y, self._text_font, self.paint)
+        if self._fill:
+            self.paint.setStyle(Paint.kFill_Style)
+            self.paint.setColor(Color4f(*self._fill))
+            self.canvas.drawSimpleText(text, x, y, self._text_font, self.paint)
+
+    def text_box(
+        self,
+        text: str,
+        x: float,
+        y: float,
+        w: float | None,
+        h: float | None = None,
+        line_height: float | None = None,
+        align: Literal["left", "right", "center", "justify"] = "left",
+        valign: Literal["top", "center", "bottom"] = "top",
+        hyphenate: bool = False,
+    ):
         """Draw text in a box.
         Args:
             text (str): text to draw
@@ -553,8 +575,91 @@ class Canvas:
             y (float): y
             w (float|None): width
             h (float|None): height
+            line_height (float|None): line height
+            align (str): horizontal text alignement ("left", "right", "center", "justify")
+            valign (str): vertical text alignement ("top", "center", "bottom")
+            hyphenate (bool): hyphenate text
         """
-        raise NotImplementedError
+        font_size = self._text_font.getSize()
+        lh = line_height if line_height is not None else font_size
+
+        # Build list of (line_text, is_paragraph_end) with word wrapping
+        wrapped: list[tuple[str, bool]] = []
+
+        for para in text.split("\n"):
+            if not para or w is None:
+                wrapped.append((para, True))
+                continue
+
+            words = para.split(" ")
+            current: list[str] = []
+
+            for word in words:
+                candidate = " ".join(current + [word])
+                if self._text_font.measureText(candidate) <= w:
+                    current.append(word)
+                else:
+                    if current:
+                        wrapped.append((" ".join(current), False))
+
+                    if hyphenate and self._text_font.measureText(word) > w:
+                        remaining = word
+                        while remaining:
+                            for end in range(len(remaining), 0, -1):
+                                part = remaining[:end] + (
+                                    "-" if end < len(remaining) else ""
+                                )
+                                if self._text_font.measureText(part) <= w:
+                                    wrapped.append((part, end >= len(remaining)))
+                                    remaining = remaining[end:]
+                                    break
+                            else:
+                                wrapped.append((remaining[0], False))
+                                remaining = remaining[1:]
+                        current = []
+                    else:
+                        current = [word]
+
+            if current:
+                wrapped.append((" ".join(current), True))
+
+        if h is not None:
+            max_lines = max(1, int(h / lh))
+            wrapped = wrapped[:max_lines]
+
+        total_height = len(wrapped) * lh
+
+        if valign == "center" and h is not None:
+            start_y = y + (h - total_height) / 2 + font_size
+        elif valign == "bottom" and h is not None:
+            start_y = y + h - total_height + font_size
+        else:
+            start_y = y + font_size
+
+        for i, (line, is_para_end) in enumerate(wrapped):
+            line_y = start_y + i * lh
+            line_w = self._text_font.measureText(line) if line else 0.0
+
+            if align == "right" and w is not None:
+                line_x = x + w - line_w
+            elif align == "center" and w is not None:
+                line_x = x + (w - line_w) / 2
+            elif align == "justify" and w is not None and not is_para_end:
+                words = line.split(" ")
+                if len(words) > 1:
+                    word_widths = [self._text_font.measureText(wd) for wd in words]
+                    gap = (w - sum(word_widths)) / (len(words) - 1)
+                    wx = x
+                    for wd, ww in zip(words, word_widths):
+                        self._draw_text_at(wd, wx, line_y)
+                        wx += ww + gap
+                    continue
+                else:
+                    line_x = x
+            else:
+                line_x = x
+
+            self._draw_text_at(line, line_x, line_y)
 
     def load_font(self, path: str) -> skia.Typeface:
         """Load a font
