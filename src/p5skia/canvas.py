@@ -580,29 +580,41 @@ class Canvas:
         """
         font_size = self._text_font.getSize()
         lh = line_height if line_height is not None else font_size
+        space_w = self._text_font.measureText(" ")
 
-        # Build list of (line_text, is_paragraph_end) with word wrapping
-        wrapped: list[tuple[str, bool]] = []
+        # wrapped: (line_text, is_paragraph_end, line_width, per_word_widths)
+        # per_word_widths is only populated for non-paragraph-end lines (needed for justify)
+        wrapped: list[tuple[str, bool, float, list[float]]] = []
 
         for para in text.split("\n"):
             if not para or w is None:
-                wrapped.append((para, True))
+                para_w = self._text_font.measureText(para) if para else 0.0
+                wrapped.append((para, True, para_w, []))
                 continue
 
             words = para.split(" ")
+            word_w_map = {wd: self._text_font.measureText(wd) for wd in set(words)}
+
             current: list[str] = []
+            current_wws: list[float] = []
+            current_w = 0.0
 
             for word in words:
-                candidate = " ".join(current + [word])
-                if self._text_font.measureText(candidate) <= w:
+                ww = word_w_map[word]
+                candidate_w = current_w + (space_w if current else 0.0) + ww
+                if candidate_w <= w:
                     current.append(word)
+                    current_wws.append(ww)
+                    current_w = candidate_w
                 else:
                     if current:
-                        wrapped.append((" ".join(current), False))
-                        current = [word]
+                        wrapped.append((" ".join(current), False, current_w, current_wws))
+                    current = [word]
+                    current_wws = [ww]
+                    current_w = ww
 
             if current:
-                wrapped.append((" ".join(current), True))
+                wrapped.append((" ".join(current), True, current_w, current_wws))
 
         if h is not None:
             max_lines = max(1, int(h / lh))
@@ -617,9 +629,8 @@ class Canvas:
         else:
             start_y = y + font_size
 
-        for i, (line, is_para_end) in enumerate(wrapped):
+        for i, (line, is_para_end, line_w, word_wws) in enumerate(wrapped):
             line_y = start_y + i * lh
-            line_w = self._text_font.measureText(line) if line else 0.0
 
             if align == "right" and w is not None:
                 line_x = x + w - line_w
@@ -628,10 +639,9 @@ class Canvas:
             elif align == "justify" and w is not None and not is_para_end:
                 words = line.split(" ")
                 if len(words) > 1:
-                    word_widths = [self._text_font.measureText(wd) for wd in words]
-                    gap = (w - sum(word_widths)) / (len(words) - 1)
+                    gap = (w - sum(word_wws)) / (len(words) - 1)
                     wx = x
-                    for wd, ww in zip(words, word_widths):
+                    for wd, ww in zip(words, word_wws):
                         self._draw_text_at(wd, wx, line_y)
                         wx += ww + gap
                     continue
