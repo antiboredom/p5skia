@@ -1,11 +1,12 @@
 from imageio_ffmpeg import read_frames, count_frames_and_secs
 import skia
 import numpy as np
+from typing import Iterator
 
 
 class Video:
     path: str
-    reader: iter
+    reader: Iterator
     meta: dict
     width: int
     height: int
@@ -56,26 +57,26 @@ class Video:
             if self.loop:
                 self.frame_number = 0
 
-    def next_old(self):
-        if self.frame_number < self.duration_frames:
-            self.frame = next(self.reader)
-            rgb_array = np.frombuffer(self.frame, dtype=np.uint8).reshape(
-                (self.height, self.width, 3)
-            )
-            rgba_array = np.full((self.height, self.width, 4), 255, dtype=np.uint8)
-            rgba_array[..., :3] = rgb_array
-            self.frame_number += 1
-            # self.image = skia.Image.frombytes(
-            #     self.frame,
-            #     dimensions=(self.width, self.height),
-            #     colorType=skia.kUnknown_ColorType,
-            #     alphaType=skia.kOpaque_AlphaType,
-            #     copy=False,
-            # )
-            self.image = skia.Image.fromarray(
-                rgba_array,
-            )
-            # self.image = Image.frombytes(self.frame, (1280, 720))
+    # def next_old(self):
+    #     if self.frame_number < self.duration_frames:
+    #         self.frame = next(self.reader)
+    #         rgb_array = np.frombuffer(self.frame, dtype=np.uint8).reshape(
+    #             (self.height, self.width, 3)
+    #         )
+    #         rgba_array = np.full((self.height, self.width, 4), 255, dtype=np.uint8)
+    #         rgba_array[..., :3] = rgb_array
+    #         self.frame_number += 1
+    #         # self.image = skia.Image.frombytes(
+    #         #     self.frame,
+    #         #     dimensions=(self.width, self.height),
+    #         #     colorType=skia.kUnknown_ColorType,
+    #         #     alphaType=skia.kOpaque_AlphaType,
+    #         #     copy=False,
+    #         # )
+    #         self.image = skia.Image.fromarray(
+    #             rgba_array,
+    #         )
+    #         # self.image = Image.frombytes(self.frame, (1280, 720))
 
     def skip_to(self, frame: int) -> None:
         """Skip to a specific frame number in the video."""
