@@ -2,7 +2,7 @@ from p5skia import Canvas
 
 c = Canvas(show=True, fps=30)
 
-vid = c.load_video("/Users/sam/projects/offset-video/assets/ruler2.mp4")
+vid = c.load_video("myvideo.mp4")
 vid.loop = True
 
 c.resize(vid.width, vid.height)
