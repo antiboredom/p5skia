@@ -511,8 +511,17 @@ class Canvas:
 
         self._render()
 
-    def arc(self):
-        # TODO: implement
+    def arc(self, x, y, w, h, start, stop):
+        """Draw an arc. An arc is a section of an ellipse defined by the x, y, w, and h parameters. x and y set the location of the arc's center. w and h set the arc's width and height. Start and stop, set the angles between which to draw the arc. Arcs are always drawn clockwise from start to stop.
+
+        Args:
+            x (float): x
+            y (float): y
+            w (float): w
+            h (float): h
+            start (float): start angle
+            stop (float): stop angle
+        """
         raise NotImplementedError
 
     def polygon(self):
@@ -608,7 +617,9 @@ class Canvas:
                     current_w = candidate_w
                 else:
                     if current:
-                        wrapped.append((" ".join(current), False, current_w, current_wws))
+                        wrapped.append(
+                            (" ".join(current), False, current_w, current_wws)
+                        )
                     current = [word]
                     current_wws = [ww]
                     current_w = ww
