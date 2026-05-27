@@ -239,6 +239,8 @@ class Canvas:
         self._height = height
 
         if self.renderer == "GPU":
+            self.context.abandonContext()
+            glfw.destroy_window(self.window)
             self._setup_gl()
         elif self.renderer == "CPU":
             self._setup_raster()
