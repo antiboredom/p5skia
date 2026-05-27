@@ -82,3 +82,4 @@ class Video:
         """Skip to a specific frame number in the video."""
 
         self.frame_number = frame
+        self.next()
