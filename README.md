@@ -1,6 +1,6 @@
 # p5skia
 
-A quick, very very work-in-progress library that lets you draw with Skia in Python in a Processing-style way, with many functions borrowed from p5py's skia renderer.
+A quick, very very work-in-progress library that lets you draw with Skia in Python in a Processing-style way, with many functions borrowed from p5py's skia renderer. I use it in my own work for quick procedural video/pdf/image generation, but its not really ready yet for general consumption.
 
 Documentation can be find in [docs.md](docs.md).
 
