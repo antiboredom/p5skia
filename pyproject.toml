@@ -14,14 +14,12 @@ dependencies = [
     "skia-python>=144.0.post2",
 ]
 
-[project.scripts]
-p5skia = "p5skia:main"
-
 [build-system]
 requires = ["uv_build>=0.10.11,<0.11.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "pydoc-markdown>=4.8.2",
     "pytest>=9.0.2",
 ]
