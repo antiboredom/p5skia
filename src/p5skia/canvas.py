@@ -3,6 +3,7 @@ import time
 from contextlib import contextmanager
 import glfw
 import os
+import math
 import skia
 from skia import Color4f, Paint, Typeface, Font, Path
 from OpenGL import GL
@@ -513,7 +514,16 @@ class Canvas:
 
         self._render()
 
-    def arc(self, x, y, w, h, start, stop):
+    def arc(
+        self,
+        x: float,
+        y: float,
+        w: float,
+        h: float,
+        start: float,
+        stop: float,
+        mode: Literal["pie", "chord"] = "pie",
+    ):
         """Draw an arc. An arc is a section of an ellipse defined by the x, y, w, and h parameters. x and y set the location of the arc's center. w and h set the arc's width and height. Start and stop, set the angles between which to draw the arc. Arcs are always drawn clockwise from start to stop.
 
         Args:
@@ -523,8 +533,14 @@ class Canvas:
             h (float): h
             start (float): start angle
             stop (float): stop angle
+            mode (str): "pie" or "chord"
         """
-        raise NotImplementedError
+
+        rect = skia.Rect.MakeXYWH(x, y, w, h)
+        self.path.moveTo(x + w / 2, y + h / 2)
+        self.path.arcTo(rect, start, stop - start, mode == "chord")
+        self.path.close()
+        self._render()
 
     def polygon(self):
         # TODO: implement with addPoly
